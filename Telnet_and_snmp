@@ -1,0 +1,59 @@
+import telnetlib
+import time
+import subprocess
+from subprocess import Popen, PIPE
+
+equipos = '127.0.0.1'
+
+
+def conexion_telnet(var1):
+    user = 'usuario'
+    password = 'password'
+    pass1 = 'enable_pass'
+    ip1 = var1.split()
+    for cmts in ip1:
+        cmts1 = cmts.strip()
+        tn = telnetlib.Telnet(cmts1)
+        time.sleep(1)
+        tn.read_until("login: ")
+        tn.write(user + "\n")
+        tn.read_until("Password: ")
+        tn.write(password + "\n")
+        time.sleep(1)
+        tn.write('enable' + "\n")
+        tn.write(pass1 + "\n")
+        tn.write("page-off \n")
+        tn.write("show cable modem" + "\n")
+        tn.write("exit" + "\n")
+        todo = tn.read_all()
+        return todo
+
+
+final = conexion_telnet(equipos)
+resul_scm = final.splitlines()
+
+with open('guardo_resul', 'w') as archivo:
+    for recorrer in range(8, len(resul_scm) - 2):
+        cambio1 = resul_scm[recorrer].split()
+        mac = cambio0[0] # devulve las mac-address 
+        ip = cambio0[1]  # devuelve las ips
+        archivo.write(ip + '\n')
+
+
+def snmp_consulta(var1):
+    lis = []
+    for i in var1:
+        oid_cm1 = 'SNMPv2-SMI::enterprises.4115.1.3.4.1.6.1.1.1.8.1' # oid para verificacion de version de firmware para CM arris
+        comunidad = 'public' # comunidad configurada en el dispositivo
+        comando = subprocess.Popen(['snmpwalk', '-v', '2c', '-c', comunidad, i, oid_cm1], stdout=PIPE, stderr=PIPE)
+        error_encontrado = comando.stderr.read()
+        listado = comando.stdout.read()
+        vene = i, listado[70::]
+        lis.append(vene)
+
+    return lis
+
+with open('guardo_resul', 'r') as archivo1:
+    llamo = snmp_consulta(archivo1)
+    for recorre in llamo:
+        print recorre
